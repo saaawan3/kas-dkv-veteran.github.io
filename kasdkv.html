@@ -1,84 +1,66 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Kas Sekolah</title>
-    <meta charset="UTF-8" />
-    <style>
-      body { font-family: Arial, sans-serif; margin:20px; background:#fafafa; }
-      h1 { color:#333; }
-      nav { margin-bottom:20px; }
-      nav a { margin-right:15px; text-decoration:none; color:#2196F3; font-weight:bold; }
-      nav a:hover { text-decoration:underline; }
-      input { margin:5px; padding:8px; border:1px solid #ccc; border-radius:5px; }
-      button { padding:8px 16px; margin-top:10px; background:#2196F3; color:white; border:none; border-radius:5px; cursor:pointer; }
-      button:hover { background:#1976D2; }
-      table { width:100%; border-collapse:collapse; margin-top:20px; }
-      th, td { border:1px solid #ddd; padding:10px; text-align:left; }
-      th { background:#f2f2f2; }
-    </style>
-  </head>
-  <body>
-    <h1>📊 Dashboard Kas Sekolah</h1>
+<head>
+  <title>Kas Sekolah</title>
+</head>
+<body>
+  <h2>Uang Kas Sekolah</h2>
+  <button onclick="logout()">Logout</button>
 
-    <nav>
-      <a href="?page=index">Uang Kas</a>
-      <a href="?page=laporan">Laporan</a>
-      <a href="?page=setting">Pengaturan</a>
-    </nav>
+  <h3>Tambah Transaksi</h3>
+  <input type="text" id="nama" placeholder="Nama"><br>
+  <input type="number" id="nominal" placeholder="Nominal"><br>
+  <input type="text" id="ket" placeholder="Keterangan"><br>
+  <button onclick="simpan()">Simpan</button>
 
-    <h3>➕ Tambah Transaksi</h3>
-    <input type="text" id="nama" placeholder="Nama Siswa">
-    <input type="number" id="nominal" placeholder="Nominal">
-    <input type="text" id="keterangan" placeholder="Keterangan">
-    <button onclick="tambah()">Simpan</button>
+  <h3>Daftar Transaksi</h3>
+  <table border="1" id="tabelKas"></table>
 
-    <h3>🔍 Filter Transaksi</h3>
-    <input type="text" id="filterNama" placeholder="Cari nama..." onkeyup="loadData()">
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwDTP08hOuI36EWcdZtICafEDZPHZx_6w-s7JOhHTYjOnP23WShZyX6zWYfhniQY05U/exec"; // Sama dengan di login.html
 
-    <table id="tabel">
-      <thead>
-        <tr>
-          <th>Tanggal</th>
-          <th>Nama</th>
-          <th>Nominal</th>
-          <th>Keterangan</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "index.html";
+    }
 
-    <script>
-      function tambah() {
-        const nama = document.getElementById("nama").value;
-        const nominal = document.getElementById("nominal").value;
-        const keterangan = document.getElementById("keterangan").value;
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "index.html";
+    }
 
-        google.script.run.withSuccessHandler(() => {
-          alert("✅ Transaksi berhasil disimpan!");
-          loadData();
-        }).simpanTransaksi(nama, nominal, keterangan);
-      }
-
-      function loadData() {
-        const filter = document.getElementById("filterNama").value.toLowerCase();
-        google.script.run.withSuccessHandler(data => {
-          const tbody = document.querySelector("#tabel tbody");
-          tbody.innerHTML = "";
-          data.slice(1).forEach(row => {
-            if (row[1].toLowerCase().includes(filter)) {
-              let tr = "<tr>";
-              tr += `<td>${new Date(row[0]).toLocaleDateString()}</td>`; // tampilkan tanggal format Indonesia
-              tr += `<td>${row[1]}</td>`;
-              tr += `<td>${row[2]}</td>`;
-              tr += `<td>${row[3]}</td>`;
-              tr += "</tr>";
-              tbody.innerHTML += tr;
-            }
+    function loadData() {
+      fetch(`${API_URL}?action=getData`)
+        .then(r => r.json())
+        .then(data => {
+          let html = "<tr><th>Tanggal</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>";
+          data.forEach(row => {
+            html += `<tr>
+              <td>${row[0]}</td>
+              <td>${row[1]}</td>
+              <td>${row[2]}</td>
+              <td>${row[3]}</td>
+            </tr>`;
           });
-        }).getData();
-      }
+          document.getElementById("tabelKas").innerHTML = html;
+        });
+    }
 
-      loadData(); // jalan pertama kali
-    </script>
-  </body>
+    function simpan() {
+      const nama = document.getElementById("nama").value;
+      const nominal = document.getElementById("nominal").value;
+      const ket = document.getElementById("ket").value;
+
+      fetch(`${API_URL}?action=simpan&nama=${nama}&nominal=${nominal}&keterangan=${ket}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            alert("Data tersimpan!");
+            loadData();
+          }
+        });
+    }
+
+    loadData();
+  </script>
+</body>
 </html>
