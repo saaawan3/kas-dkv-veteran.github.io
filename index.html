@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Kas Sekolah</title>
+    <meta charset="UTF-8" />
+    <style>
+      body { font-family: Arial, sans-serif; margin:20px; background:#fafafa; }
+      h1 { color:#333; }
+      input, select { margin:5px; padding:8px; border:1px solid #ccc; border-radius:5px; }
+      button { padding:8px 16px; margin-top:10px; background:#2196F3; color:white; border:none; border-radius:5px; cursor:pointer; }
+      button:hover { background:#1976D2; }
+      table { width:100%; border-collapse:collapse; margin-top:20px; }
+      th, td { border:1px solid #ddd; padding:10px; text-align:left; }
+      th { background:#f2f2f2; }
+    </style>
+  </head>
+  <body>
+    <h1>📒 Aplikasi Kas Sekolah</h1>
+
+    <h3>➕ Tambah Transaksi</h3>
+    <input type="text" id="nama" placeholder="Nama Siswa">
+    <input type="number" id="nominal" placeholder="Nominal">
+    <input type="text" id="keterangan" placeholder="Keterangan">
+    <button onclick="tambah()">Simpan</button>
+
+    <h3>🔍 Filter Transaksi</h3>
+    <input type="text" id="filterNama" placeholder="Cari nama..." onkeyup="loadData()">
+
+    <table id="tabel">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Nama</th>
+          <th>Nominal</th>
+          <th>Keterangan</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script>
+      function tambah() {
+        const nama = document.getElementById("nama").value;
+        const nominal = document.getElementById("nominal").value;
+        const keterangan = document.getElementById("keterangan").value;
+
+        google.script.run.withSuccessHandler(() => {
+          alert("✅ Transaksi berhasil disimpan!");
+          loadData();
+        }).simpanTransaksi(nama, nominal, keterangan);
+      }
+
+      function loadData() {
+        const filter = document.getElementById("filterNama").value.toLowerCase();
+        google.script.run.withSuccessHandler(data => {
+          const tbody = document.querySelector("#tabel tbody");
+          tbody.innerHTML = "";
+          data.slice(1).forEach(row => {
+            if (row[1].toLowerCase().includes(filter)) {
+              let tr = "<tr>";
+              row.forEach(col => tr += `<td>${col}</td>`);
+              tr += "</tr>";
+              tbody.innerHTML += tr;
+            }
+          });
+        }).getData();
+      }
+
+      loadData(); // panggil saat halaman pertama dibuka
+    </script>
+  </body>
+</html>
